@@ -1,0 +1,114 @@
+{
+  "name": "slow_elasticsearch_garbage_collection",
+  "description": "This incident type refers to a problem that occurs when garbage collection takes a longer time than usual to complete in an Elasticsearch system. Garbage collection is a process used by Elasticsearch to free up memory occupied by unused objects and data structures. When this process takes longer than expected, it can slow down the overall performance of the system, causing delays and potential downtime. This issue can be caused by a variety of factors, including insufficient memory allocation or poor system resource management.",
+  "params": [
+    {
+      "name": "ELASTICSEARCH_LOG_FILE_PATH",
+      "value": ""
+    },
+    {
+      "name": "CONFIG_FILE",
+      "value": ""
+    },
+    {
+      "name": "ELASTICSEARCH_ENDPOINT",
+      "value": ""
+    },
+    {
+      "name": "HEAP_SIZE",
+      "value": ""
+    },
+    {
+      "name": "HOST_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Slow Elasticsearch Garbage Collection\nThis incident type refers to a problem that occurs when garbage collection takes a longer time than usual to complete in an Elasticsearch system. Garbage collection is a process used by Elasticsearch to free up memory occupied by unused objects and data structures. When this process takes longer than expected, it can slow down the overall performance of the system, causing delays and potential downtime. This issue can be caused by a variety of factors, including insufficient memory allocation or poor system resource management."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check Elasticsearch cluster health and node status"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl -s -XGET ${ELASTICSEARCH_ENDPOINT}/_cluster/health?pretty`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check Elasticsearch cluster and node stats"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl -s -XGET ${ELASTICSEARCH_ENDPOINT}/_nodes/stats?pretty`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check Elasticsearch garbage collection stats"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl -s -XGET ${ELASTICSEARCH_ENDPOINT}/_nodes/stats/jvm?pretty | grep gc`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check Elasticsearch heap usage and garbage collection logs"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `curl -s -XGET ${ELASTICSEARCH_ENDPOINT}/_nodes/stats/jvm?pretty | grep -E 'jvm\\.(max|mem|gc)\\.'`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check Elasticsearch garbage collection logs"
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "(host | host_name=$HOST_NAME) union (pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE) | `tail -f ${ELASTICSEARCH_LOG_FILE_PATH} | grep --line-buffered 'gc\\['`"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Increase the memory allocation for Elasticsearch to ensure that it has enough resources to complete garbage collection efficiently."
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "host | host_name=$HOST_NAME | invoke_update_elasticsearch_heap_size_config($CONFIG_FILE, $HEAP_SIZE)"
+    }
+  ]
+}
